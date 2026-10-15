@@ -1,0 +1,676 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trading Journal — สอบกองทุน (ออฟไลน์)</title><style>
+*{box-sizing:border-box}
+body{margin:0;background:#101217;color:#e7e9ee;font:14px/1.55 -apple-system,'Helvetica Neue',sans-serif}
+header{padding:14px 18px;border-bottom:1px solid #242933;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap}
+h1{font-size:17px;margin:0}.muted{color:#878e9c;font-size:12px}
+main{padding:16px 18px;max-width:1180px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.tabs button{background:#1a1e26;color:#aeb6c4;border:1px solid #262c37;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+.tabs button.on{background:#2a4d7a;color:#fff;border-color:#36618f}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:10px;margin:12px 0}
+.kpi{background:#171b22;border:1px solid #242933;border-radius:10px;padding:10px 12px}
+.kpi .v{font-size:19px;font-weight:600}.kpi .l{font-size:11px;color:#878e9c;margin-top:2px}
+.pos{color:#5ed28f}.neg{color:#ff7b7b}.warn{color:#ffc85e}
+.card{background:#171b22;border:1px solid #242933;border-radius:10px;padding:14px;margin:12px 0}
+.bar{height:9px;background:#22262f;border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid #242933;padding:5px 7px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+th{color:#878e9c;font-weight:500;position:sticky;top:0;background:#171b22}
+.wrap{max-height:460px;overflow:auto}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:9px}
+label{font-size:11px;color:#878e9c;display:block}
+input,select,textarea{width:100%;background:#0e1116;color:#e7e9ee;border:1px solid #2a303b;border-radius:7px;padding:7px 8px;font-size:13px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#3d7fc4}
+button.go{background:#2f7d4f;border:0;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+button.go:hover{background:#38945d}
+button.sm{background:#242933;border:1px solid #2f3643;color:#aeb6c4;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px}
+button.del{background:#3a1f22;border-color:#6b2f34;color:#ffb3b3}
+.flag{background:#3a1f22;border:1px solid #6b2f34;border-radius:8px;padding:9px 11px;margin:9px 0;color:#ffb3b3}
+.okbox{background:#1d3327;border:1px solid #2f6b45;border-radius:8px;padding:9px 11px;margin:9px 0;color:#9fe3bb}
+.note{background:#1a222c;border:1px solid #2a3a4a;border-radius:8px;padding:9px 11px;margin:9px 0;color:#a9c6e8;font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hide{display:none}
+h2{font-size:15px;margin:18px 0 6px}
+</style></head><body>
+<header><h1>📒 Trading Journal</h1>
+  <span class="muted" id="hdr"></span>
+  <span class="muted" style="margin-left:auto" id="saved"></span>
+</header>
+<main>
+<div class="tabs">
+  <button data-t="dash" class="on">แดชบอร์ด</button>
+  <button data-t="add">＋ บันทึกไม้</button>
+  <button data-t="list">ไม้ทั้งหมด</button>
+  <button data-t="days">รายวัน</button>
+  <button data-t="stats">สถิติ</button>
+  <button data-t="set">ตั้งค่าการสอบ</button>
+</div>
+
+<section id="dash"></section>
+
+<section id="add" class="hide">
+  <div class="card"><b>บันทึกไม้ที่ปิดแล้ว</b>
+    <div class="muted">กรอก entry + SL + exit แล้วมันคิด R ให้เอง · ไม่มี SL ก็กรอกแค่กำไร/ขาดทุนได้</div>
+    <form id="f" style="margin-top:10px">
+      <div><label>วันที่</label><input name="date" type="date" required></div>
+      <div><label>เวลา</label><input name="time" type="time"></div>
+      <div><label>คู่เงิน</label><input name="symbol" list="syms" placeholder="XAUUSD" required></div>
+      <div><label>ทิศ</label><select name="side"><option value="buy">buy</option><option value="sell">sell</option></select></div>
+      <div><label>lot</label><input name="lots" type="number" step="any"></div>
+      <div><label>ราคาเข้า</label><input name="entry" type="number" step="any"></div>
+      <div><label>SL</label><input name="sl" type="number" step="any"></div>
+      <div><label>TP</label><input name="tp" type="number" step="any"></div>
+      <div><label>ราคาออก</label><input name="exit" type="number" step="any"></div>
+      <div><label>กำไร/ขาดทุน (เงิน)</label><input name="pnl" type="number" step="any" required></div>
+      <div><label>R (ปล่อยว่างให้คิดเอง)</label><input name="r" type="number" step="any" placeholder="auto"></div>
+      <div><label>setup</label><input name="setup" list="setups" placeholder="breakout"></div>
+      <div><label>ที่ทำผิด</label><input name="mistake" list="mistakes" placeholder="เข้าเร็ว / ไม่ตั้ง SL"></div>
+      <div><label>อารมณ์</label><select name="emotion"><option value=""></option><option>สงบ</option><option>กลัว</option><option>โลภ</option><option>แก้แค้น</option><option>เบื่อ</option><option>มั่นใจ</option></select></div>
+      <div style="grid-column:1/-1"><label>โน้ต</label><textarea name="note" rows="2" placeholder="ทำไมเข้า ทำไมออก ครั้งหน้าจะแก้อะไร"></textarea></div>
+      <div style="grid-column:1/-1" class="row"><button class="go" type="submit">บันทึก (⌘/Ctrl+Enter)</button>
+        <span class="muted" id="rprev"></span></div>
+    </form>
+  </div>
+  <datalist id="syms"></datalist><datalist id="setups"></datalist><datalist id="mistakes"></datalist>
+</section>
+
+<section id="list" class="hide"></section>
+<section id="days" class="hide"></section>
+<section id="stats" class="hide"></section>
+
+<section id="set" class="hide">
+  <div class="card"><b>เงื่อนไขการสอบ</b>
+    <div class="muted">ตัวเลขพวกนี้คือ "ด่าน" ที่แดชบอร์ดใช้เตือน — กรอกตามกฎของกองทุนที่สอบ</div>
+    <form id="sf" style="margin-top:10px">
+      <div><label>ชื่อบัญชี/รอบสอบ</label><input name="account_name"></div>
+      <div><label>สกุลเงิน</label><input name="currency"></div>
+      <div><label>ทุนเริ่ม</label><input name="start_balance" type="number" step="any"></div>
+      <div><label>เป้ากำไร %</label><input name="target_pct" type="number" step="any"></div>
+      <div><label>ขาดทุน/วัน ห้ามเกิน %</label><input name="daily_loss_pct" type="number" step="any"></div>
+      <div><label>ขาดทุนรวม ห้ามเกิน %</label><input name="max_loss_pct" type="number" step="any"></div>
+      <div><label>วันเทรดขั้นต่ำ</label><input name="min_days" type="number" step="1"></div>
+      <div><label>เสี่ยง/ไม้ ที่ตั้งใจ %</label><input name="risk_pct" type="number" step="any"></div>
+      <div style="grid-column:1/-1"><button class="go" type="submit">บันทึกเงื่อนไข</button></div>
+    </form>
+  </div>
+  <div class="card"><b>ข้อมูลของพี่</b>
+    <div class="muted">เก็บในเบราว์เซอร์ของเครื่องนี้เท่านั้น (<code id="df"></code>) —
+      ไม่ส่งขึ้นเซิร์ฟเวอร์ ไม่มีใครเห็น<br>
+      ⚠️ ไม่มี .bak อัตโนมัติ และถ้าล้างข้อมูลเบราว์เซอร์/ใช้โหมดส่วนตัว ข้อมูลจะหาย
+      ⇒ กด "ดาวน์โหลด JSON" เก็บไว้เป็นระยะ</div>
+    <div class="row" style="margin-top:9px">
+      <button class="sm" onclick="exportCsv()">ดาวน์โหลด CSV</button>
+      <button class="sm" onclick="exportJson()">ดาวน์โหลด JSON (สำรองทั้งก้อน)</button>
+      <button class="sm" onclick="$('#imp').click()">กู้คืนจากไฟล์ JSON</button>
+      <input id="imp" type="file" accept=".json,application/json" class="hide"
+             onchange="if(this.files[0])importJson(this.files[0]);this.value=''">
+    </div>
+  </div>
+</section>
+</main>
+<script>
+// journal_engine.js — เครื่องคิดฝั่งเบราว์เซอร์ของ Trading Journal
+// พอร์ตมาจาก dashboard()/compute() ใน trading_journal_app.py + trading_journal.py
+// ⚠️ ห้ามแก้ที่นี่ที่เดียว: build_standalone.py --selftest จะเทียบเลขกับฝั่ง Python ทุกครั้ง
+(function (root) {
+  const DEFAULT_SETTINGS = {
+    account_name: "สอบกองทุน #1", currency: "USD", start_balance: 10000,
+    target_pct: 10, daily_loss_pct: 5, max_loss_pct: 10, min_days: 4, risk_pct: 1,
+  };
+
+  // ค่าว่าง/อ่านไม่ออก → null (ไม่ใช่ 0 — 0 มีความหมายจริง เช่น เสมอ)
+  function f(v, dflt) {
+    if (dflt === undefined) dflt = null;
+    if (v === null || v === undefined || v === "") return dflt;
+    const x = parseFloat(String(v).replace(/,/g, "").trim());
+    return Number.isFinite(x) ? x : dflt;
+  }
+
+  const TRADE_FIELDS = ["id", "date", "time", "symbol", "side", "lots", "entry", "sl",
+    "tp", "exit", "pnl", "r", "setup", "mistake", "emotion", "note"];
+
+  function todayStr(d) {
+    d = d || new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      + `-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  // ตรงกับ normalize() ฝั่ง Python ทุกบรรทัด (รวมทั้ง r = ค่าที่คิดแล้ว ไม่ใช่ค่าดิบ)
+  function normalize(t) {
+    const o = {};
+    for (const k of TRADE_FIELDS) o[k] = t[k] === undefined ? "" : t[k];
+    o.date = String(t.date || todayStr()).slice(0, 10);
+    o.side = String(t.side === undefined || t.side === null ? "" : t.side)
+      .toLowerCase().startsWith("s") ? "sell" : "buy";
+    for (const k of ["lots", "entry", "sl", "tp", "exit", "pnl"]) o[k] = f(t[k]);
+    o.r = tradeR(t);
+    return o;
+  }
+
+  function tradeR(t) {
+    const r = f(t.r);
+    if (r !== null) return r;
+    const e = f(t.entry), sl = f(t.sl), x = f(t.exit);
+    if (e === null || sl === null || x === null) return null;
+    const risk = Math.abs(e - sl);
+    if (risk <= 0) return null;
+    const d = String(t.side || "").toLowerCase().startsWith("s") ? -1 : 1;
+    return (x - e) * d / risk;
+  }
+
+  // "YYYY-MM-DD" + "HH:MM" → Date ตามเวลาเครื่อง (ห้ามใช้ new Date(str) — มันอ่านเป็น UTC แล้ววันเพี้ยน)
+  function toDate(dstr, tstr) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dstr || "").trim());
+    if (!m) return null;
+    const hm = /^(\d{1,2}):(\d{2})/.exec(String(tstr || "")) || [null, 0, 0];
+    return new Date(+m[1], +m[2] - 1, +m[3], +hm[1] || 0, +hm[2] || 0);
+  }
+
+  // ข้อความตัวเลขต้องตรงกับ str() ของ Python (2500 → "2500.0") ไม่งั้น CSV 2 ฝั่งคนละไฟล์
+  function pyNum(v) { return Number.isInteger(v) ? v.toFixed(1) : String(v); }
+
+  function csvCell(v) {
+    if (v === null || v === undefined) return "";
+    const s = typeof v === "number" ? pyNum(v) : String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function csvText(trades) {
+    const rows = [TRADE_FIELDS.join(",")];
+    for (const t of trades) {
+      const o = normalize(t);
+      o.id = t.id === undefined || t.id === null ? "" : t.id;
+      rows.push(TRADE_FIELDS.map(k => csvCell(o[k])).join(","));
+    }
+    return rows.join("\r\n") + "\r\n";
+  }
+
+  function median(a) {
+    const s = [...a].sort((x, y) => x - y), n = s.length;
+    if (!n) return null;
+    return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+  }
+  function pstdev(a) {
+    if (a.length < 2) return 0;
+    const mu = a.reduce((p, c) => p + c, 0) / a.length;
+    return Math.sqrt(a.reduce((p, c) => p + (c - mu) ** 2, 0) / a.length);
+  }
+  function maxDrawdown(series) {
+    let peak = 0, eq = 0, worst = 0, peakI = 0, worstLen = 0;
+    series.forEach((x, i) => {
+      eq += x;
+      if (eq > peak) { peak = eq; peakI = i; }
+      const dd = eq - peak;
+      if (dd < worst) { worst = dd; worstLen = i - peakI; }
+    });
+    return [worst, worstLen];
+  }
+  function streaks(flags) {
+    let mw = 0, ml = 0, cw = 0, cl = 0;
+    for (const ok of flags) {
+      if (ok) { cw += 1; cl = 0; } else { cl += 1; cw = 0; }
+      mw = Math.max(mw, cw); ml = Math.max(ml, cl);
+    }
+    return [mw, ml];
+  }
+  const sum = a => a.reduce((p, c) => p + c, 0);
+
+  function groupRows(pairs) {   // [[key, value], ...] → แถวสรุป เรียงตาม n มากไปน้อย
+    const g = new Map();
+    for (const [k, v] of pairs) {
+      if (!g.has(k)) g.set(k, []);
+      g.get(k).push(v);
+    }
+    return [...g.entries()].map(([k, v]) => ({
+      key: k, n: v.length, sum: sum(v), per: sum(v) / v.length,
+      wr: v.filter(x => x > 0).length / v.length * 100,
+    })).sort((a, b) => b.n - a.n);
+  }
+
+  // พอร์ตจาก compute() — เฉพาะค่าที่หน้าเว็บใช้แสดง
+  function computeStats(trades) {
+    const n = trades.length, m = { n };
+    if (!n) return m;
+    const ts = [...trades].sort((a, b) => a._dt - b._dt);
+
+    const net = ts.map(t => t.pnl).filter(x => x !== null);
+    m.n_money = net.length;
+    if (net.length) {
+      const winsM = net.filter(x => x > 0), lossM = net.filter(x => x < 0);
+      m.net_sum = sum(net);
+      m.net_per_trade = sum(net) / net.length;
+      m.winrate_money = winsM.length / net.length * 100;
+      m.gross_win = sum(winsM);
+      m.gross_loss = sum(lossM);
+      m.pf_money = lossM.length ? sum(winsM) / Math.abs(sum(lossM)) : null;
+      m.avg_win = winsM.length ? sum(winsM) / winsM.length : null;
+      m.avg_loss = lossM.length ? sum(lossM) / lossM.length : null;
+      m.best = Math.max(...net);
+      m.worst = Math.min(...net);
+      const [dd, ddlen] = maxDrawdown(net);
+      m.dd_money = dd; m.dd_len = ddlen;
+      const [mw, ml] = streaks(net.map(x => x > 0));
+      m.streak_win = mw; m.streak_loss = ml;
+    }
+
+    const R = ts.map(t => t._r).filter(x => x !== null);
+    m.n_r = R.length;
+    m.r_coverage = R.length / n * 100;
+    if (R.length) {
+      const winsR = R.filter(x => x > 0), lossR = R.filter(x => x < 0);
+      m.r_sum = sum(R);
+      m.r_per_trade = sum(R) / R.length;
+      m.winrate_r = winsR.length / R.length * 100;
+      m.pf_r = lossR.length ? sum(winsR) / Math.abs(sum(lossR)) : null;
+      m.r_median = median(R);
+      m.r_min = Math.min(...R); m.r_max = Math.max(...R);
+      m.r_std = pstdev(R);
+      const below = R.filter(x => x < 1);
+      m.below1r_n = below.length;
+      m.below1r_pct = below.length / R.length * 100;
+      const totLoss = sum(R.filter(x => x < 0));
+      if (totLoss) {
+        // ปัดแบบ Python (banker's rounding) เพื่อให้ k ตรงกันเป๊ะ
+        const raw = R.length * 0.10, fl = Math.floor(raw), diff = raw - fl;
+        let rk = diff > 0.5 ? fl + 1 : diff < 0.5 ? fl : (fl % 2 === 0 ? fl : fl + 1);
+        const k = Math.max(1, rk);
+        const worstK = [...R].sort((a, b) => a - b).slice(0, k);
+        m.tail10_n = k;
+        m.tail10_loss_share = sum(worstK.filter(x => x < 0)) / totLoss * 100;
+        m.tail10_pct_of_trades = k / R.length * 100;
+      }
+      const hist = new Map();
+      for (const x of R) {
+        const b = Math.floor(Math.max(-3, Math.min(2.99, x)) * 2) / 2;
+        hist.set(b, (hist.get(b) || 0) + 1);
+      }
+      m.r_hist = [...hist.entries()].sort((a, b) => a[0] - b[0]);
+      m.dd_r = maxDrawdown(R)[0];
+    }
+
+    const names = ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"];
+    const wd = ts.filter(t => t._r !== null)
+      .map(t => [(t._dt.getDay() + 6) % 7, t._r]);
+    m.by_weekday = [...new Map(wd.map(([k]) => [k, k])).keys()].sort((a, b) => a - b)
+      .map(k => {
+        const v = wd.filter(p => p[0] === k).map(p => p[1]);
+        return { key: names[k], n: v.length, sum: sum(v), per: sum(v) / v.length,
+                 wr: v.filter(x => x > 0).length / v.length * 100 };
+      });
+
+    const tagPairs = [];
+    for (const t of ts) {
+      if (t.pnl === null) continue;
+      for (const tg of [t.setup, t.mistake, t.emotion]) {
+        if (tg) tagPairs.push([String(tg).trim(), t.pnl]);
+      }
+    }
+    m.by_tag = groupRows(tagPairs);
+
+    if (m.r_sum !== undefined && m.net_sum !== undefined) {
+      if ((m.r_sum < 0 && m.net_sum >= 0) || (m.net_sum < 0 && m.r_sum >= 0)) {
+        m.flag_r_money_divergence = true;
+      }
+    }
+    return m;
+  }
+
+  function dailyRollup(trades) {
+    const by = new Map();
+    for (const t of trades) {
+      if (!by.has(t.date)) {
+        by.set(t.date, { date: t.date, n: 0, pnl: 0, r: 0, n_r: 0, wins: 0 });
+      }
+      const g = by.get(t.date);
+      g.n += 1;
+      if (t.pnl !== null) { g.pnl += t.pnl; if (t.pnl > 0) g.wins += 1; }
+      if (t._r !== null) { g.r += t._r; g.n_r += 1; }
+    }
+    return [...by.keys()].sort().map(k => by.get(k));
+  }
+
+  // พอร์ตจาก dashboard() — payload หน้าเว็บ
+  function dashboard(data) {
+    // ใช้ settings ตามที่ได้มา ห้ามเติม default ที่นี่ (ฝั่ง Python เติมตอนโหลดไฟล์
+    // เหมือน STORE.read() เติมตอนอ่าน localStorage) — เติมสองที่ = เลขคนละชุด
+    const s = data.settings || {};
+    const trades = (data.trades || []).map(t => {
+      const o = normalize(t);
+      o._r = tradeR(t);
+      o._dt = toDate(o.date, o.time);
+      return o;
+    });
+    const start = f(s.start_balance, 0) || 0;
+    const days = dailyRollup(trades);
+    const targetMoney = start * (f(s.target_pct, 0) || 0) / 100;
+    const dailyCap = start * (f(s.daily_loss_pct, 0) || 0) / 100;
+    const maxCap = start * (f(s.max_loss_pct, 0) || 0) / 100;
+
+    let eq = start, minEquity = start;
+    const equityCurve = [{ date: "เริ่ม", equity: start }];
+    const breaches = [];
+    const fx = x => x.toFixed(2);
+    for (const d of days) {
+      const sod = eq;                     // ทุนต้นวัน = ฐานของกฎ daily loss
+      eq += d.pnl;
+      d.equity_end = eq;
+      d.equity_start = sod;
+      d.daily_used = d.pnl < 0 ? -d.pnl : 0;
+      d.daily_left = Math.max(0, dailyCap - d.daily_used);
+      d.breach_daily = dailyCap > 0 && d.daily_used > dailyCap;
+      d.breach_max = maxCap > 0 && (start - eq) > maxCap;
+      if (d.breach_daily) {
+        breaches.push({ date: d.date, kind: "daily",
+          detail: `ขาดทุนวันนั้น ${fx(d.daily_used)} > เพดาน ${fx(dailyCap)}` });
+      }
+      if (d.breach_max) {
+        breaches.push({ date: d.date, kind: "max",
+          detail: `ทุนเหลือ ${fx(eq)} ต่ำกว่าเส้นตาย ${fx(start - maxCap)}` });
+      }
+      minEquity = Math.min(minEquity, eq);
+      equityCurve.push({ date: d.date, equity: eq });
+    }
+
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const td = days.find(d => d.date === today) || null;
+    const eqSodToday = days.length && days[days.length - 1].date !== today
+      ? days[days.length - 1].equity_end : (td ? td.equity_start : eq);
+
+    // to_journal_rows() ฝั่ง Python ทิ้งไม้ที่อ่านวันที่ไม่ออก — ต้องทิ้งเท่ากัน ไม่งั้นเลขคนละชุด
+    const stats = computeStats(trades.filter(t => t._dt !== null));
+    const minDays = Math.trunc(f(s.min_days, 0) || 0);
+
+    const rps = stats.r_per_trade, mps = stats.net_per_trade;
+    let sizingWarn = null;
+    if (rps !== undefined && mps !== undefined && rps !== null && mps !== null && rps * mps < 0) {
+      sizingWarn = `R/ไม้ = ${rps >= 0 ? "+" : ""}${rps.toFixed(3)} แต่เงิน/ไม้ = ${mps >= 0 ? "+" : ""}${mps.toFixed(2)}`
+        + " → ลอตไม่สม่ำเสมอ (ไม้ที่ผิดทางลอตใหญ่กว่าไม้ที่ถูกทาง) ให้ตัดสินฝีมือจาก R";
+    }
+
+    const uniq = key => [...new Set(trades.map(t => t[key]).filter(Boolean))].sort();
+    return {
+      settings: s, sizing_warn: sizingWarn,
+      start_balance: start, equity: eq, pnl_total: eq - start,
+      target_money: targetMoney,
+      target_pct_done: targetMoney ? (eq - start) / targetMoney * 100 : null,
+      daily_cap: dailyCap, max_cap: maxCap,
+      max_loss_line: start - maxCap, buffer_to_max: eq - (start - maxCap),
+      min_equity: minEquity, worst_dd: minEquity - start,
+      today, today_pnl: td ? td.pnl : 0, today_trades: td ? td.n : 0,
+      today_left: dailyCap ? Math.max(0, dailyCap - (td && td.pnl < 0 ? -td.pnl : 0)) : null,
+      equity_sod_today: eqSodToday,
+      days_traded: days.length, days_needed: Math.max(0, minDays - days.length),
+      breaches,
+      passed: targetMoney > 0 && (eq - start) >= targetMoney
+              && days.length >= minDays && !breaches.length,
+      days, equity_curve: equityCurve, stats, note: null,
+      n_trades: trades.length,
+      symbols: uniq("symbol"), setups: uniq("setup"), mistakes: uniq("mistake"),
+      trades: trades.map(t => {
+        const o = Object.assign({}, t);
+        o.r = t._r; delete o._r; delete o._dt;
+        return o;
+      }),
+    };
+  }
+
+  const API = { DEFAULT_SETTINGS, TRADE_FIELDS, f, todayStr, normalize, tradeR,
+                dashboard, computeStats, csvText };
+  if (typeof module === "object" && module.exports) module.exports = API;
+  else root.ENGINE = API;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+const ENGINE=globalThis.ENGINE;
+
+const TRADE_FIELDS=["id", "date", "time", "symbol", "side", "lots", "entry", "sl", "tp", "exit", "pnl", "r", "setup", "mistake", "emotion", "note"];
+const STORE=(()=>{
+  const KEY='tradingJournal.v1';
+  const blank=()=>({settings:Object.assign({},ENGINE.DEFAULT_SETTINGS),trades:[]});
+  function read(){
+    let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){ return blank(); }
+    if(!raw) return blank();
+    let d=null; try{ d=JSON.parse(raw); }catch(e){ return blank(); }
+    if(!d||typeof d!=='object') return blank();
+    return {settings:Object.assign({},ENGINE.DEFAULT_SETTINGS,d.settings||{}),
+            trades:Array.isArray(d.trades)?d.trades:[]};
+  }
+  // คืน false เมื่อเซฟไม่ได้ — ต้องบอกผู้ใช้ ห้ามเงียบ (ไม่งั้นพิมพ์ไปแล้วหายไม่รู้ตัว)
+  function write(d){ try{ localStorage.setItem(KEY,JSON.stringify(d)); return true; }
+                     catch(e){ return false; } }
+  return {read,write,KEY};
+})();
+
+function dl(name,text,mime){
+  const b=new Blob([text],{type:mime}), u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),1500);
+}
+function exportCsv(){
+  dl('journal_trades.csv','\ufeff'+ENGINE.csvText(STORE.read().trades),
+     'text/csv;charset=utf-8');
+}
+function exportJson(){ dl('journal_data.json',JSON.stringify(STORE.read(),null,1),
+                         'application/json;charset=utf-8'); }
+function importJson(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    let d=null; try{ d=JSON.parse(r.result); }catch(e){ toast('ไฟล์นี้ไม่ใช่ JSON',1); return; }
+    if(!d||!Array.isArray(d.trades)){ toast('ไฟล์นี้ไม่มีรายการไม้ (trades)',1); return; }
+    if(!confirm('ทับข้อมูลเดิมทั้งหมดด้วยไฟล์นี้? ('+d.trades.length+' ไม้)')) return;
+    if(!STORE.write({settings:Object.assign({},ENGINE.DEFAULT_SETTINGS,d.settings||{}),
+                     trades:d.trades})){ toast('เซฟไม่ได้',1); return; }
+    load(); toast('✅ กู้คืนแล้ว '+d.trades.length+' ไม้');
+  };
+  r.readAsText(file);
+}
+
+let D=null;
+const $=s=>document.querySelector(s), money=x=>(x==null?'—':(x<0?'-':'')+Math.abs(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
+const sgn=x=>x==null?'':(x>=0?'pos':'neg');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  ['dash','add','list','days','stats','set'].forEach(id=>$('#'+id).classList.toggle('hide',id!==b.dataset.t));
+});
+
+async function load(){ D=ENGINE.dashboard(STORE.read());
+  D.data_file='localStorage: '+STORE.KEY; render(); }
+
+function kpi(l,v,c){return `<div class="kpi"><div class="v ${c||''}">${v}</div><div class="l">${l}</div></div>`}
+
+function render(){
+  const s=D.settings, cur=s.currency||'';
+  $('#hdr').textContent=`${s.account_name} · ทุนเริ่ม ${money(D.start_balance)} ${cur} · ${D.n_trades} ไม้ · ${D.days_traded} วันที่เทรด`;
+  $('#df').textContent=D.data_file;
+
+  // ---- dashboard
+  let h='';
+  if(D.note) h+=`<div class="note">${esc(D.note)}</div>`;
+  if(D.breaches.length) h+=`<div class="flag"><b>🔴 ผิดกฎ ${D.breaches.length} ครั้ง</b><br>`+
+    D.breaches.map(b=>`${b.date} — ${esc(b.detail)}`).join('<br>')+`</div>`;
+  if(D.passed) h+=`<div class="okbox">✅ เข้าเงื่อนไขผ่านครบ: ถึงเป้ากำไร · ครบวันขั้นต่ำ · ไม่ผิดกฎ</div>`;
+  if(D.sizing_warn) h+=`<div class="note">⚠️ ${esc(D.sizing_warn)}</div>`;
+
+  h+='<div class="grid">';
+  h+=kpi('ทุนปัจจุบัน',money(D.equity)+' '+cur);
+  h+=kpi('กำไร/ขาดทุนรวม',money(D.pnl_total),sgn(D.pnl_total));
+  if(D.target_money>0) h+=kpi(`เป้า ${s.target_pct}% (${money(D.target_money)})`,
+      (D.target_pct_done>=0?'+':'')+D.target_pct_done.toFixed(1)+'%',D.target_pct_done>=100?'pos':'warn');
+  h+=kpi('วันนี้ '+D.today,money(D.today_pnl)+` (${D.today_trades} ไม้)`,sgn(D.today_pnl));
+  if(D.daily_cap>0) h+=kpi('ขาดทุนวันนี้เหลือได้อีก',money(D.today_left),D.today_left<=0?'neg':'warn');
+  if(D.max_cap>0) h+=kpi('ห่างเส้นตาย (max loss)',money(D.buffer_to_max),D.buffer_to_max<=0?'neg':'pos');
+  h+=kpi('ทุนต่ำสุดที่เคยแตะ',money(D.min_equity),sgn(D.worst_dd));
+  h+=kpi('วันเทรดขั้นต่ำ',`${D.days_traded}/${s.min_days}`+(D.days_needed?` (ขาด ${D.days_needed})`:' ✓'),D.days_needed?'warn':'pos');
+  h+='</div>';
+
+  if(D.target_money>0){
+    const p=Math.max(0,Math.min(100,D.target_pct_done||0));
+    h+=`<div class="card"><b>ความคืบหน้าถึงเป้า</b>
+      <div class="bar"><i style="width:${p}%;background:#2f7d4f"></i></div>
+      <div class="muted">${money(D.pnl_total)} / ${money(D.target_money)} ${cur} = ${(D.target_pct_done||0).toFixed(1)}%</div>`;
+    if(D.max_cap>0){
+      const used=Math.max(0,Math.min(100,(D.start_balance-D.equity)/D.max_cap*100));
+      h+=`<div style="margin-top:10px"><b>ใช้โควตาขาดทุนรวมไปแล้ว</b>
+      <div class="bar"><i style="width:${used}%;background:${used>70?'#c2454a':'#a8742c'}"></i></div>
+      <div class="muted">เส้นตายอยู่ที่ทุน ${money(D.max_loss_line)} ${cur} · ใช้ไป ${used.toFixed(0)}%</div></div>`;
+    }
+    h+='</div>';
+  }
+  h+=`<div class="card"><b>เส้นทุน</b>${equitySvg(D.equity_curve)}</div>`;
+  const st=D.stats||{};
+  if(st.n){
+    h+='<div class="grid">';
+    if(st.n_r) h+=kpi('expectancy (R/ไม้)',(st.r_per_trade>=0?'+':'')+st.r_per_trade.toFixed(3),sgn(st.r_per_trade));
+    if(st.n_money) h+=kpi('เงิน/ไม้',money(st.net_per_trade),sgn(st.net_per_trade));
+    if(st.winrate_money!=null) h+=kpi('winrate',st.winrate_money.toFixed(1)+'%');
+    if(st.pf_money!=null) h+=kpi('profit factor',st.pf_money.toFixed(2),st.pf_money>=1?'pos':'neg');
+    if(st.streak_loss!=null) h+=kpi('แพ้ติดกันสูงสุด',st.streak_loss+' ไม้','warn');
+    h+='</div>';
+  }
+  $('#dash').innerHTML=h;
+
+  // ---- list
+  const ts=[...D.trades].reverse();
+  $('#list').innerHTML=`<div class="card"><b>ไม้ทั้งหมด (${D.trades.length})</b>
+   <div class="wrap"><table><thead><tr><th class="l">วันที่</th><th class="l">เวลา</th><th class="l">คู่</th>
+   <th class="l">ทิศ</th><th>lot</th><th>เข้า</th><th>SL</th><th>ออก</th><th>P/L</th><th>R</th>
+   <th class="l">setup</th><th class="l">ที่ทำผิด</th><th class="l">โน้ต</th><th></th></tr></thead><tbody>`+
+   (ts.length?ts.map(t=>`<tr><td class="l">${esc(t.date)}</td><td class="l">${esc(t.time)}</td>
+   <td class="l">${esc(t.symbol)}</td><td class="l">${esc(t.side)}</td><td>${t.lots??'—'}</td>
+   <td>${t.entry??'—'}</td><td>${t.sl??'—'}</td><td>${t.exit??'—'}</td>
+   <td class="${sgn(t.pnl)}">${money(t.pnl)}</td><td class="${sgn(t.r)}">${t.r==null?'—':(t.r>=0?'+':'')+t.r.toFixed(2)}</td>
+   <td class="l">${esc(t.setup)}</td><td class="l">${esc(t.mistake)}</td><td class="l">${esc(t.note).slice(0,60)}</td>
+   <td><button class="sm del" onclick="del('${t.id}')">ลบ</button></td></tr>`).join('')
+   :'<tr><td colspan="14" class="l muted">ยังไม่มีไม้ — ไปแท็บ ＋ บันทึกไม้</td></tr>')+`</tbody></table></div></div>`;
+
+  // ---- days
+  $('#days').innerHTML=`<div class="card"><b>สรุปรายวัน</b>
+   <div class="muted">กฎ daily loss คิดจาก "ทุนต้นวัน" ตามแบบกองทุน ไม่ใช่ทุนเริ่มสอบ</div>
+   <div class="wrap"><table><thead><tr><th class="l">วันที่</th><th>ไม้</th><th>ชนะ</th><th>P/L</th><th>R รวม</th>
+   <th>ทุนต้นวัน</th><th>ทุนปลายวัน</th><th>เหลือขาดทุนได้</th><th class="l">สถานะ</th></tr></thead><tbody>`+
+   (D.days.length?D.days.map(d=>`<tr><td class="l">${d.date}</td><td>${d.n}</td><td>${d.wins}</td>
+   <td class="${sgn(d.pnl)}">${money(d.pnl)}</td><td class="${sgn(d.r)}">${(d.r>=0?'+':'')+d.r.toFixed(2)}</td>
+   <td>${money(d.equity_start)}</td><td>${money(d.equity_end)}</td><td>${money(d.daily_left)}</td>
+   <td class="l">${d.breach_daily?'<span class="neg">ผิดกฎรายวัน</span>':(d.breach_max?'<span class="neg">หลุด max loss</span>':'<span class="pos">ผ่าน</span>')}</td></tr>`).join('')
+   :'<tr><td colspan="9" class="l muted">ยังไม่มีข้อมูล</td></tr>')+`</tbody></table></div></div>`;
+
+  // ---- stats
+  let sh='';
+  if(!st.n) sh='<div class="note">ยังไม่มีไม้พอให้คิดสถิติ</div>';
+  else{
+    sh+='<div class="grid">';
+    if(st.n_r){
+      sh+=kpi('expectancy (R/ไม้)',(st.r_per_trade>=0?'+':'')+st.r_per_trade.toFixed(4),sgn(st.r_per_trade));
+      sh+=kpi('R รวม',(st.r_sum>=0?'+':'')+st.r_sum.toFixed(2),sgn(st.r_sum));
+      sh+=kpi('winrate (R)',st.winrate_r.toFixed(1)+'%');
+      if(st.pf_r!=null) sh+=kpi('PF (R)',st.pf_r.toFixed(3),st.pf_r>=1?'pos':'neg');
+      sh+=kpi('median R',(st.r_median>=0?'+':'')+st.r_median.toFixed(2));
+      if(st.dd_r!=null) sh+=kpi('DD แย่สุด (R)',st.dd_r.toFixed(2),'neg');
+      sh+=kpi('ปิดต่ำกว่า +1R',st.below1r_pct.toFixed(0)+'%','warn');
+    }
+    if(st.n_money){
+      sh+=kpi('avg win',money(st.avg_win),'pos');
+      sh+=kpi('avg loss',money(st.avg_loss),'neg');
+      sh+=kpi('ไม้ที่ดีสุด',money(st.best),'pos');
+      sh+=kpi('ไม้ที่แย่สุด',money(st.worst),'neg');
+      sh+=kpi('ชนะติดสูงสุด',st.streak_win+' ไม้','pos');
+      sh+=kpi('แพ้ติดสูงสุด',st.streak_loss+' ไม้','neg');
+    }
+    sh+='</div>';
+    if(st.r_hist) sh+=`<div class="card"><b>การแจกแจง R</b>${histSvg(st.r_hist)}</div>`;
+    const tb=(title,rows,unit)=>!rows||!rows.length?'':`<div class="card"><b>${title}</b>
+      <table><thead><tr><th class="l">กลุ่ม</th><th>n</th><th>${unit}/ไม้</th><th>winrate</th><th>รวม</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr><td class="l">${esc(r.key)}</td><td>${r.n}</td>
+      <td class="${sgn(r.per)}">${(r.per>=0?'+':'')+r.per.toFixed(3)}</td><td>${r.wr.toFixed(0)}%</td>
+      <td class="${sgn(r.sum)}">${(r.sum>=0?'+':'')+r.sum.toFixed(2)}</td></tr>`).join('')+'</tbody></table></div>';
+    sh+=tb('แยกตามวันในสัปดาห์',st.by_weekday,'R');
+    sh+=tb('แยกตาม setup / ที่ทำผิด / อารมณ์',st.by_tag,'เงิน');
+    sh+=`<div class="note">⚪ ช่อง "ไม่เคยแตะ 1R" ว่างไว้จริง — ต้องมี MFE (ราคาวิ่งไปไกลสุดเท่าไหร่ก่อนปิด) ซึ่งการกรอกมือยังไม่เก็บค่านี้</div>`;
+  }
+  $('#stats').innerHTML=sh;
+
+  // ---- fill settings + datalists
+  const sf=$('#sf'); Object.keys(s).forEach(k=>{ if(sf[k]) sf[k].value=s[k]; });
+  $('#syms').innerHTML=D.symbols.map(x=>`<option>${esc(x)}</option>`).join('');
+  $('#setups').innerHTML=D.setups.map(x=>`<option>${esc(x)}</option>`).join('');
+  $('#mistakes').innerHTML=D.mistakes.map(x=>`<option>${esc(x)}</option>`).join('');
+}
+
+function equitySvg(c){
+  if(!c||c.length<2) return '<div class="muted">ยังไม่มีวันที่เทรด</div>';
+  const W=640,H=180,ys=c.map(p=>p.equity),lo=Math.min(...ys),hi=Math.max(...ys),rg=(hi-lo)||1;
+  const pts=c.map((p,i)=>[4+i/(c.length-1)*(W-8),H-18-(p.equity-lo)/rg*(H-34)]);
+  const line=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const base=c[0].equity, y0=H-18-(base-lo)/rg*(H-34);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">
+   <line x1="0" y1="${y0.toFixed(1)}" x2="${W}" y2="${y0.toFixed(1)}" stroke="#555" stroke-dasharray="3 3"/>
+   <polyline fill="none" stroke="#4ea1ff" stroke-width="1.8" points="${line}"/>
+   <text x="4" y="12" font-size="10" fill="#878e9c">สูงสุด ${hi.toFixed(2)} / ต่ำสุด ${lo.toFixed(2)}</text></svg>`;
+}
+function histSvg(h){
+  if(!h||!h.length) return '<div class="muted">—</div>';
+  const W=640,H=160,mx=Math.max(...h.map(x=>x[1]))||1,bw=W/h.length;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">`+h.map((x,i)=>{
+    const bh=x[1]/mx*(H-28), col=x[0]>=0?'#2f9e63':'#c2454a';
+    return `<rect x="${(i*bw+1).toFixed(1)}" y="${(H-20-bh).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}"><title>${x[0].toFixed(1)}R : ${x[1]} ไม้</title></rect>
+      <text x="${(i*bw+bw/2).toFixed(1)}" y="${H-6}" font-size="9" fill="#878e9c" text-anchor="middle">${x[0].toFixed(1)}</text>`;
+  }).join('')+'</svg>';
+}
+
+function toast(msg,bad){ const e=$('#saved'); e.textContent=msg; e.className=bad?'neg':'pos';
+  setTimeout(()=>{e.textContent='';},2500); }
+
+$('#f').onsubmit=async ev=>{
+  ev.preventDefault();
+  const fd=Object.fromEntries(new FormData($('#f')).entries());
+  if(ENGINE.f(fd.pnl)===null){ toast('ต้องกรอกกำไร/ขาดทุน (เงิน)',1); return; }
+  const data=STORE.read(), t={};
+  TRADE_FIELDS.forEach(k=>t[k]=fd[k]==null?'':fd[k]);
+  t.id=String(Date.now())+'-'+Math.random().toString(36).slice(2,8);
+  data.trades.push(t);
+  if(!STORE.write(data)){ toast('เซฟไม่ได้ — เบราว์เซอร์นี้ปิด localStorage อยู่',1); return; }
+  const keep=$('#f').date.value;
+  $('#f').reset(); $('#f').date.value=keep; $('#rprev').textContent='';
+  await load(); toast('✅ บันทึกแล้ว');
+};
+$('#f').addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter') $('#f').requestSubmit(); });
+['entry','sl','exit','side'].forEach(n=>$('#f')[n].addEventListener('input',()=>{
+  const f=$('#f'), e=+f.entry.value, sl=+f.sl.value, x=+f.exit.value;
+  if(f.entry.value&&f.sl.value&&f.exit.value&&Math.abs(e-sl)>0){
+    const d=f.side.value==='sell'?-1:1, r=(x-e)*d/Math.abs(e-sl);
+    $('#rprev').textContent=`→ ไม้นี้ = ${r>=0?'+':''}${r.toFixed(2)} R`;
+  } else $('#rprev').textContent='';
+}));
+$('#sf').onsubmit=async ev=>{
+  ev.preventDefault();
+  const fd=Object.fromEntries(new FormData($('#sf')).entries());
+  const data=STORE.read();
+  Object.keys(fd).forEach(k=>{
+    if(!(k in ENGINE.DEFAULT_SETTINGS)) return;
+    const dv=ENGINE.DEFAULT_SETTINGS[k];
+    data.settings[k]=(typeof dv==='string')?fd[k]:ENGINE.f(fd[k],dv);
+  });
+  if(!STORE.write(data)){ toast('เซฟไม่ได้',1); return; }
+  await load(); toast('✅ บันทึกเงื่อนไขแล้ว');
+};
+async function del(id){
+  if(!confirm('ลบไม้นี้? (ลบแล้วเอาคืนไม่ได้ — สำรองด้วยปุ่มดาวน์โหลด JSON ก่อน)')) return;
+  const data=STORE.read(), before=data.trades.length;
+  data.trades=data.trades.filter(t=>String(t.id)!==String(id));
+  if(data.trades.length===before){ toast('ไม่เจอไม้นี้',1); return; }
+  if(!STORE.write(data)){ toast('ลบไม่ได้',1); return; }
+  await load(); toast('ลบแล้ว');
+}
+// toISOString() เป็น UTC ⇒ ก่อน 7 โมงเช้าไทยจะเติมวันเมื่อวาน ต้องประกอบจากเวลาเครื่อง
+const localDay=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+$('#f').date.value=localDay(new Date());
+load();
+</script></body></html>
